@@ -215,6 +215,15 @@ func AddVisit(visit models.Visit) (*models.Visit, error) {
 			// We hit max number of rounds, so we are finished
 			isFinished = true
 		}
+	} else if matchType == models.RANDOMX01 {
+		visit.SetIsBust(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
+		newValues := leg.Parameters.RandomX01Numbers[visit.PlayerID].Numbers
+		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64]))
+		isFinished = !visit.IsBust && visit.IsVisitCheckout(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
+	} else if matchType == models.RANDOMX01CRAZY {
+		visit.SetIsBust(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
+		newValues := leg.Parameters.RandomX01Numbers[visit.PlayerID].Numbers
+		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64 - 1]))
 	}
 
 	// Determine who will be the next player

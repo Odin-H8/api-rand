@@ -94,6 +94,40 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 			tx.Rollback()
 			return nil, err
 		}
+	} else if *matchType == models.RANDOMX01 {
+		params := match.Legs[0].Parameters
+		legIndex := len(match.Legs) - 1
+		if match.Seed.Valid {
+			for playerIndex, playerID := range match.Players {
+				randomX01Numbers := &models.RandomX01Numbers{
+					PlayerId: playerID,
+					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, legIndex, false),
+				}
+				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
+			}
+		}
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	} else if *matchType == models.RANDOMX01CRAZY {
+		params := match.Legs[0].Parameters
+		legIndex := len(match.Legs) - 1
+		if match.Seed.Valid {
+			for playerIndex, playerID := range match.Players {
+				randomX01Numbers := &models.RandomX01Numbers{
+					PlayerId: playerID,
+					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, legIndex, true),
+				}
+				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
+			}
+		}
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	for idx, playerID := range players {
@@ -400,6 +434,42 @@ func FinishLeg(legID int, currentPlayer int, winnerID null.Int) error {
 				return err
 			}
 			log.Printf("[%d] Inserting 170 statistics for player %d", legID, playerID)
+		}
+	} else if matchType == models.RANDOMX01 {
+		statisticsMap, err := CalculateX01Statistics(legID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		for playerID, stats := range statisticsMap {
+			_, err = tx.Exec(`
+				INSERT INTO statistics_random_x01 (leg_id, player_id, ppd, ppd_score, first_nine_ppd, first_nine_ppd_score, checkout_percentage, checkout_attempts, checkout, darts_thrown, 60s_plus,
+				100s_plus, 140s_plus, 180s, accuracy_20, accuracy_19, overall_accuracy, crazy_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, legID, playerID, stats.PPD, stats.PPDScore, stats.FirstNinePPD, stats.FirstNinePPDScore,
+				stats.CheckoutPercentage, stats.CheckoutAttempts, stats.Checkout, stats.DartsThrown, stats.Score60sPlus, stats.Score100sPlus, stats.Score140sPlus,
+				stats.Score180s, stats.AccuracyStatistics.Accuracy20, stats.AccuracyStatistics.Accuracy19, stats.AccuracyStatistics.AccuracyOverall, false)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			log.Printf("[%d] Inserting Random X01 statistics for player %d", legID, playerID)
+		}
+	} else if matchType == models.RANDOMX01CRAZY {
+		statisticsMap, err := CalculateX01Statistics(legID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		for playerID, stats := range statisticsMap {
+			_, err = tx.Exec(`
+				INSERT INTO statistics_random_x01_crazy (leg_id, player_id, ppd, ppd_score, first_nine_ppd, first_nine_ppd_score, checkout_percentage, checkout_attempts, checkout, darts_thrown, 60s_plus,
+					100s_plus, 140s_plus, 180s, accuracy_20, accuracy_19, overall_accuracy, crazy_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, legID, playerID, stats.PPD, stats.PPDScore, stats.FirstNinePPD, stats.FirstNinePPDScore,
+				stats.CheckoutPercentage, stats.CheckoutAttempts, stats.Checkout, stats.DartsThrown, stats.Score60sPlus, stats.Score100sPlus, stats.Score140sPlus,
+				stats.Score180s, stats.AccuracyStatistics.Accuracy20, stats.AccuracyStatistics.Accuracy19, stats.AccuracyStatistics.AccuracyOverall, true)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			log.Printf("[%d] Inserting Random X01 Crazy statistics for player %d", legID, playerID)
 		}
 	} else {
 		statisticsMap, err := CalculateX01Statistics(legID)

@@ -1,9 +1,12 @@
 package models
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/guregu/null"
@@ -34,13 +37,15 @@ type Leg struct {
 
 // LegParameters struct used for storing leg parameters
 type LegParameters struct {
-	LegID         int          `json:"leg_id,omitempty"`
-	OutshotType   *OutshotType `json:"outshot_type,omitempty"`
-	Numbers       []int        `json:"numbers"`
-	Hits          map[int]int  `json:"hits"`
-	StartingLives null.Int     `json:"starting_lives,omitempty"`
-	PointsToWin   null.Int     `json:"points_to_win,omitempty"`
-	MaxRounds     null.Int     `json:"max_rounds,omitempty"`
+	LegID         int          			 `json:"leg_id,omitempty"`
+	OutshotType   *OutshotType 			 `json:"outshot_type,omitempty"`
+	Numbers       []int        			 `json:"numbers"`
+	Hits          map[int]int  			 `json:"hits"`
+	StartingLives null.Int     			 `json:"starting_lives,omitempty"`
+	PointsToWin   null.Int     			 `json:"points_to_win,omitempty"`
+	MaxRounds     null.Int               `json:"max_rounds,omitempty"`
+	Seed          null.String            `json:"seed,omitempty"`
+	RandomX01Numbers []*RandomX01Numbers `json:"random_x01_numbers,omitempty"`
 }
 
 // IsTicTacToeWinner will check if the given player has won a game of Tic Tac Toe
@@ -148,6 +153,27 @@ func (params LegParameters) IsTicTacToeDraw() bool {
 		draw = false
 	}
 	return draw
+}
+
+func (params *LegParameters) GenerateRandomX01Numbers(seed string, playerIndex int, legIndex int, isCrazyMode bool) []int {
+	if (playerIndex != 0 && isCrazyMode) {
+		seed += strconv.Itoa(playerIndex)
+	}
+	seed += strconv.Itoa(legIndex)
+	numbers := make([]int, 22)
+	numbers[0] = 0 // Miss
+	hash := sha256.Sum256([]byte(seed))
+	rand := rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(hash[:8]))))
+
+	for i := 1; i < len(numbers); i++ {
+		number := rand.Intn(21) + 1
+		for containsInt(numbers, number) {
+			number = rand.Intn(21) + 1
+		}
+		numbers[i] = number
+	}
+
+	return numbers
 }
 
 // MarshalJSON will marshall the given object to JSON
@@ -438,4 +464,9 @@ func (leg Leg) IsLegCheckout() bool {
 	}
 	lastVisit := leg.Visits[len(leg.Visits)-1]
 	return lastVisit.IsCheckout
+}
+
+type RandomX01Numbers struct {
+	Numbers []int `json:"numbers"`
+	PlayerId int `json:"player_id"`
 }

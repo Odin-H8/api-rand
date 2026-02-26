@@ -53,6 +53,10 @@ const (
 	SCAM = 16
 	// ONESEVENTY contenst representing type 17
 	ONESEVENTY = 17
+	// RANDOM X01 constant representing type 18
+	RANDOMX01 = 18
+	// RANDOM X01 CRAZY constant representing type 19
+	RANDOMX01CRAZY = 19
 )
 
 var MatchTypes = map[int]string{
@@ -70,7 +74,8 @@ var MatchTypes = map[int]string{
 	KILLBULL:        "Kill Bull",
 	GOTCHA:          "Gotcha",
 	JDCPRACTICE:     "JDC Practice",
-	KNOCKOUT:        "Knockout"}
+	KNOCKOUT:        "Knockout",
+	RANDOMX01:       "Random X01",}
 
 // TargetsBermudaTriangle contains the target for each round of Bermuda Triangle
 var TargetsBermudaTriangle = [13]Target{
@@ -167,6 +172,7 @@ type Match struct {
 	LastThrow        null.Time          `json:"last_throw_time,omitempty"`
 	EloChange        map[int]*PlayerElo `json:"elo_change,omitempty"`
 	LegsWon          []int              `json:"legs_won,omitempty"`
+	Seed             null.String        `json:"seed,omitempty"`
 }
 
 // MarshalJSON will marshall the given object to JSON
@@ -205,6 +211,7 @@ func (match Match) MarshalJSON() ([]byte, error) {
 		LastThrow        null.Time          `json:"last_throw_time,omitempty"`
 		EloChange        map[int]*PlayerElo `json:"elo_change,omitempty"`
 		LegsWon          []int              `json:"legs_won,omitempty"`
+		Seed             null.String        `json:"seed,omitempty"`
 	}
 	legPostfix := [4]string{"st", "nd", "rd", "th"}
 	idx := ((len(match.Legs)+90)%100-10)%10 - 1

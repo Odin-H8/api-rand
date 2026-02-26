@@ -79,6 +79,38 @@ func NewMatch(match models.Match) (*models.Match, error) {
 			tx.Rollback()
 			return nil, err
 		}
+	} else if match.MatchType.ID == models.RANDOMX01 {
+		params := match.Legs[0].Parameters
+		if match.Seed.Valid {
+			for playerIndex, playerID := range match.Players {
+				randomX01Numbers := &models.RandomX01Numbers{
+					PlayerId: playerID,
+					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, 0, false),
+				}
+				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
+			}
+		}
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	} else if match.MatchType.ID == models.RANDOMX01CRAZY {
+		params := match.Legs[0].Parameters
+		if match.Seed.Valid {
+			for playerIndex, playerID := range match.Players {
+				randomX01Numbers := &models.RandomX01Numbers{
+					PlayerId: playerID,
+					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, 0, true),
+				}
+				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
+			}
+		}
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	tx.Exec("UPDATE matches SET current_leg_id = ? WHERE id = ?", legID, matchID)
