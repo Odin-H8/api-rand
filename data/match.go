@@ -21,12 +21,11 @@ func NewMatch(match models.Match) (*models.Match, error) {
 	if match.CreatedAt.IsZero() {
 		match.CreatedAt = time.Now().UTC()
 	}
-	res, err := tx.Exec(`INSERT INTO matches (match_type_id, match_mode_id, owe_type_id, venue_id, office_id, is_practice, tournament_id, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt)
+	res, err := tx.Exec(`INSERT INTO matches (match_type_id, match_mode_id, owe_type_id, venue_id, office_id, is_practice, tournament_id, created_at, seed)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt, match.Seed)
 	if err != nil {
 		tx.Rollback()
-		return nil, err
 	}
 	matchID, err := res.LastInsertId()
 	if err != nil {
@@ -90,7 +89,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
 		}
-		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives) VALUES (?, ?)", legID, params.StartingLives)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
