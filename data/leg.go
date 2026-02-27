@@ -101,7 +101,7 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 			for playerIndex, playerID := range match.Players {
 				randomX01Numbers := &models.RandomX01Numbers{
 					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, legIndex, false),
+					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, legIndex, false),
 				}
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
@@ -118,7 +118,7 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 			for playerIndex, playerID := range match.Players {
 				randomX01Numbers := &models.RandomX01Numbers{
 					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, legIndex, true),
+					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, legIndex, true),
 				}
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
@@ -1038,14 +1038,14 @@ func GetLeg(id int) (*models.Leg, error) {
 
 	if matchType == models.RANDOMX01 {
 		for i, player := range leg.Players {
-			numbers := leg.Parameters.GenerateRandomX01Numbers("seed", i, 0, false)
+			numbers := leg.Parameters.GenerateRandomX01NumbersAlt("seed", i, 0, false)
 
 			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
 		}
 
 	} else if matchType == models.RANDOMX01CRAZY {
 		for i, player := range leg.Players {
-			numbers := leg.Parameters.GenerateRandomX01Numbers("seed", i, 0, true)
+			numbers := leg.Parameters.GenerateRandomX01NumbersAlt("seed", i, 0, true)
 
 			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
 		}

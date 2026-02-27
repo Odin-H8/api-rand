@@ -84,7 +84,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 			for playerIndex, playerID := range match.Players {
 				randomX01Numbers := &models.RandomX01Numbers{
 					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, 0, false),
+					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, 0, false),
 				}
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
@@ -100,7 +100,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 			for playerIndex, playerID := range match.Players {
 				randomX01Numbers := &models.RandomX01Numbers{
 					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01Numbers(match.Seed.String, playerIndex, 0, true),
+					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, 0, true),
 				}
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}

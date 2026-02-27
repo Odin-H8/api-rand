@@ -223,11 +223,23 @@ func AddVisit(visit models.Visit) (*models.Visit, error) {
 
 		newValues := leg.Parameters.RandomX01Numbers[i].Numbers
 
-		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64]))
+		valIdx := visit.FirstDart.Value.Int64
+		if valIdx == 25 {
+			valIdx = 21
+		}
+		visit.FirstDart.Value = null.IntFrom(int64(newValues[valIdx]))
 
-		visit.SecondDart.Value = null.IntFrom(int64(newValues[visit.SecondDart.Value.Int64]))
+		valIdx = visit.SecondDart.Value.Int64
+		if valIdx == 25 {
+			valIdx = 21
+		}
+		visit.SecondDart.Value = null.IntFrom(int64(newValues[valIdx]))
 
-		visit.ThirdDart.Value = null.IntFrom(int64(newValues[visit.ThirdDart.Value.Int64]))
+		valIdx = visit.ThirdDart.Value.Int64
+		if valIdx == 25 {
+			valIdx = 21
+		}
+		visit.ThirdDart.Value = null.IntFrom(int64(newValues[valIdx]))
 
 		isFinished = !visit.IsBust && visit.IsVisitCheckout(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
 	} else if matchType == models.RANDOMX01CRAZY {

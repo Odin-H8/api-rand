@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"math"
 	"math/rand"
+	"slices"
 	"strconv"
 	"time"
 
@@ -171,6 +172,33 @@ func (params *LegParameters) GenerateRandomX01Numbers(seed string, playerIndex i
 			number = rand.Intn(21) + 1
 		}
 		numbers[i] = number
+	}
+
+	return numbers
+}
+
+func (LegParameters) GenerateRandomX01NumbersAlt(seed string, playerIdx int, legIdx int, isCrazyMode bool) []int {
+	if playerIdx != 0 && isCrazyMode {
+		seed += strconv.Itoa(playerIdx)
+	}
+	seed += strconv.Itoa(legIdx)
+	numbers := make([]int, 22)
+	numbers[0] = 0 // Miss
+	hash := sha256.Sum256([]byte(seed))
+	rand := rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(hash[:8]))))
+
+	tempSlice := make([]int, 0, 21)
+	for i := range 20 {
+		tempSlice = append(tempSlice, i)
+	}
+
+	tempSlice = append(tempSlice, 25)
+
+	for i := 21; i > 0; i-- {
+		n := rand.Intn(i)
+		numbers[i] = tempSlice[n]
+
+		tempSlice = slices.Delete(tempSlice, n, n+1)
 	}
 
 	return numbers
