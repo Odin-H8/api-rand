@@ -1,8 +1,8 @@
 db:
   address: localhost
   port: 3306
-  username: kcapp
-  password: 
+  username: developer
+  password: abcd1234
   schema: kcapp
 api:
   port: 8001
