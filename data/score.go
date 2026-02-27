@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"math"
-	"slices"
 	"sort"
 	"sync"
 
@@ -218,28 +217,6 @@ func AddVisit(visit models.Visit) (*models.Visit, error) {
 		}
 	} else if matchType == models.RANDOMX01 {
 		visit.SetIsBust(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
-
-		i := slices.Index(leg.Players, visit.PlayerID)
-
-		newValues := leg.Parameters.RandomX01Numbers[i].Numbers
-
-		valIdx := visit.FirstDart.Value.Int64
-		if valIdx == 25 {
-			valIdx = 21
-		}
-		visit.FirstDart.Value = null.IntFrom(int64(newValues[valIdx]))
-
-		valIdx = visit.SecondDart.Value.Int64
-		if valIdx == 25 {
-			valIdx = 21
-		}
-		visit.SecondDart.Value = null.IntFrom(int64(newValues[valIdx]))
-
-		valIdx = visit.ThirdDart.Value.Int64
-		if valIdx == 25 {
-			valIdx = 21
-		}
-		visit.ThirdDart.Value = null.IntFrom(int64(newValues[valIdx]))
 
 		isFinished = !visit.IsBust && visit.IsVisitCheckout(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
 	} else if matchType == models.RANDOMX01CRAZY {
