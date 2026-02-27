@@ -167,7 +167,7 @@ func GetMatches() ([]*models.Match, error) {
 	rows, err := models.DB.Query(`
 		SELECT
 			m.id, m.is_finished, m.is_abandoned, m.is_walkover, m.is_bye, m.current_leg_id, m.winner_id, m.office_id, m.is_practice,
-			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
+			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, m.seed, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
 			mm.wins_required, mm.legs_required, mm.is_draw_possible, mm.is_challenge, ot.id, ot.item, v.id, v.name, v.description, l.updated_at as 'last_throw',
 			GROUP_CONCAT(DISTINCT p2l.player_id ORDER BY p2l.order) AS 'players'
 		FROM matches m
@@ -193,7 +193,7 @@ func GetMatches() ([]*models.Match, error) {
 		venue := new(models.Venue)
 		var players string
 		err := rows.Scan(&m.ID, &m.IsFinished, &m.IsAbandoned, &m.IsWalkover, &m.IsBye, &m.CurrentLegID, &m.WinnerID, &m.OfficeID, &m.IsPractice, &m.CreatedAt, &m.UpdatedAt,
-			&m.OweTypeID, &m.VenueID, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
+			&m.OweTypeID, &m.VenueID, &m.Seed, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
 			&m.MatchMode.ID, &m.MatchMode.Name, &m.MatchMode.ShortName, &m.MatchMode.WinsRequired, &m.MatchMode.LegsRequired, &m.MatchMode.IsDrawPossible,
 			&m.MatchMode.IsChallenge, &ot.ID, &ot.Item, &venue.ID, &venue.Name, &venue.Description, &m.LastThrow, &players)
 		if err != nil {
@@ -231,7 +231,7 @@ func GetActiveMatches(since int) ([]*models.Match, error) {
 	rows, err := models.DB.Query(`
 		SELECT
 			m.id, m.is_finished, m.is_abandoned, m.is_walkover, m.is_bye, m.current_leg_id, m.winner_id, m.office_id, m.is_practice,
-			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
+			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, m.seed, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
 			mm.wins_required, mm.legs_required, mm.is_draw_possible, mm.is_challenge, ot.id, ot.item, v.id, v.name, v.description, l.updated_at as 'last_throw',
 			GROUP_CONCAT(DISTINCT p2l.player_id ORDER BY p2l.order) AS 'players'
 		FROM matches m
@@ -260,7 +260,7 @@ func GetActiveMatches(since int) ([]*models.Match, error) {
 		venue := new(models.Venue)
 		var players string
 		err := rows.Scan(&m.ID, &m.IsFinished, &m.IsAbandoned, &m.IsWalkover, &m.IsBye, &m.CurrentLegID, &m.WinnerID, &m.OfficeID, &m.IsPractice,
-			&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
+			&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.Seed, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
 			&m.MatchMode.ID, &m.MatchMode.Name, &m.MatchMode.ShortName, &m.MatchMode.WinsRequired, &m.MatchMode.LegsRequired, &m.MatchMode.IsDrawPossible,
 			&m.MatchMode.IsChallenge, &ot.ID, &ot.Item, &venue.ID, &venue.Name, &venue.Description, &m.LastThrow, &players)
 		if err != nil {
@@ -362,7 +362,7 @@ func GetMatchesLimit(start int, limit int) ([]*models.Match, error) {
 	rows, err := models.DB.Query(`
 		SELECT
 			m.id, m.is_finished, m.is_abandoned, m.is_walkover, m.is_bye, m.current_leg_id, m.winner_id, m.office_id, m.is_practice,
-			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
+			m.created_at, m.updated_at, m.owe_type_id, m.venue_id, m.seed, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name,
 			mm.wins_required, mm.legs_required, mm.is_draw_possible, mm.is_challenge, ot.id, ot.item, v.id, v.name, v.description,
 			l.updated_at as 'last_throw', GROUP_CONCAT(DISTINCT p2l.player_id ORDER BY p2l.order) AS 'players',
 			m.tournament_id, t.id, t.name, tg.id, tg.name, GROUP_CONCAT(legs.winner_id ORDER BY legs.id) AS 'legs_won'
@@ -397,7 +397,7 @@ func GetMatchesLimit(start int, limit int) ([]*models.Match, error) {
 		var players string
 		var legsWon null.String
 		err := rows.Scan(&m.ID, &m.IsFinished, &m.IsAbandoned, &m.IsWalkover, &m.IsBye, &m.CurrentLegID, &m.WinnerID, &m.OfficeID, &m.IsPractice,
-			&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
+			&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.Seed, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
 			&m.MatchMode.ID, &m.MatchMode.Name, &m.MatchMode.ShortName, &m.MatchMode.WinsRequired, &m.MatchMode.LegsRequired, &m.MatchMode.IsDrawPossible,
 			&m.MatchMode.IsChallenge, &ot.ID, &ot.Item, &venue.ID, &venue.Name, &venue.Description, &m.LastThrow, &players, &m.TournamentID,
 			&tournament.TournamentID, &tournament.TournamentName, &tournament.TournamentGroupID, &tournament.TournamentGroupName, &legsWon)
@@ -438,7 +438,7 @@ func GetMatch(id int) (*models.Match, error) {
 	err := models.DB.QueryRow(`
         SELECT
 			m.id, m.is_finished, m.is_abandoned, m.is_walkover, m.is_bye, m.current_leg_id, m.winner_id, m.office_id, m.is_practice, m.created_at, m.updated_at,
-			m.owe_type_id, m.venue_id, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name, mm.wins_required,
+			m.owe_type_id, m.venue_id, m.seed, mt.id, mt.name, mt.description, mm.id, mm.name, mm.short_name, mm.wins_required,
 			mm.legs_required, mm.tiebreak_match_type_id, mm.is_draw_possible, mm.is_challenge, ot.id, ot.item, v.id, v.name, v.description,
 			MAX(l.updated_at) AS 'last_throw',
 			MIN(s.created_at) AS 'first_throw',
@@ -456,7 +456,7 @@ func GetMatch(id int) (*models.Match, error) {
 			LEFT JOIN tournament t ON t.id = p2t.tournament_id
 			LEFT JOIN tournament_group tg ON tg.id = p2t.tournament_group_id
 		WHERE m.id = ?`, id).Scan(&m.ID, &m.IsFinished, &m.IsAbandoned, &m.IsWalkover, &m.IsBye, &m.CurrentLegID, &m.WinnerID, &m.OfficeID, &m.IsPractice,
-		&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
+		&m.CreatedAt, &m.UpdatedAt, &m.OweTypeID, &m.VenueID, &m.Seed, &m.MatchType.ID, &m.MatchType.Name, &m.MatchType.Description,
 		&m.MatchMode.ID, &m.MatchMode.Name, &m.MatchMode.ShortName, &m.MatchMode.WinsRequired, &m.MatchMode.LegsRequired, &m.MatchMode.TieBreakMatchTypeID, &m.MatchMode.IsDrawPossible,
 		&m.MatchMode.IsChallenge, &ot.ID, &ot.Item, &venue.ID, &venue.Name, &venue.Description, &m.LastThrow, &m.FirstThrow, &players, &m.TournamentID, &tournament.TournamentID,
 		&tournament.TournamentName, &tournament.OfficeID, &tournament.TournamentGroupID, &tournament.TournamentGroupName, &tournament.IsSeason,

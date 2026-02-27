@@ -255,6 +255,7 @@ func (match Match) MarshalJSON() ([]byte, error) {
 		LastThrow:        match.LastThrow,
 		EloChange:        match.EloChange,
 		LegsWon:          match.LegsWon,
+		Seed:             match.Seed,
 	})
 }
 
