@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"log"
 	"math"
@@ -23,18 +24,22 @@ func NewMatch(match models.Match) (*models.Match, error) {
 		match.CreatedAt = time.Now().UTC()
 	}
 	if !match.Seed.Valid {
-		// If seed is not valid, generate a random ascii seed
+		// If seed is not valid, generate a random ASCII-safe seed
 		seedBytes := make([]byte, 16)
-		rand.Read(seedBytes)
-		match.Seed = null.StringFrom(string(seedBytes))
+		if _, err := rand.Read(seedBytes); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		match.Seed = null.StringFrom(hex.EncodeToString(seedBytes))
 	}
 	seed := match.Seed
 
 	res, err := tx.Exec(`INSERT INTO matches (match_type_id, match_mode_id, owe_type_id, venue_id, office_id, is_practice, tournament_id, created_at, seed)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt, seed)
+		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt, seed.String)
 	if err != nil {
 		tx.Rollback()
+		return nil, err
 	}
 	matchID, err := res.LastInsertId()
 	if err != nil {
