@@ -45,7 +45,6 @@ type LegParameters struct {
 	StartingLives    null.Int            `json:"starting_lives,omitempty"`
 	PointsToWin      null.Int            `json:"points_to_win,omitempty"`
 	MaxRounds        null.Int            `json:"max_rounds,omitempty"`
-	Seed             null.String         `json:"seed,omitempty"`
 	RandomX01Numbers []*RandomX01Numbers `json:"random_x01_numbers,omitempty"`
 }
 
@@ -156,28 +155,19 @@ func (params LegParameters) IsTicTacToeDraw() bool {
 	return draw
 }
 
-func (params *LegParameters) GenerateRandomX01Numbers(seed string, playerIndex int, legIndex int, isCrazyMode bool) []int {
-	if playerIndex != 0 && isCrazyMode {
-		seed += strconv.Itoa(playerIndex)
-	}
-	seed += strconv.Itoa(legIndex)
-	numbers := make([]int, 22)
-	numbers[0] = 0 // Miss
-	hash := sha256.Sum256([]byte(seed))
-	rand := rand.New(rand.NewSource(int64(binary.BigEndian.Uint64(hash[:8]))))
-
-	for i := 1; i < len(numbers); i++ {
-		number := rand.Intn(21) + 1
-		for containsInt(numbers, number) {
-			number = rand.Intn(21) + 1
+func (params *LegParameters) SetRandomX01Numbers(players []int, seed null.String, legIndex int, isCrazyMode bool) {
+	if seed.Valid {
+		for playerIndex, playerID := range players {
+			randomX01Numbers := &RandomX01Numbers{
+				PlayerId: playerID,
+				Numbers:  params.GenerateRandomX01NumbersAlt(seed.String, playerIndex, legIndex, isCrazyMode),
+			}
+			params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 		}
-		numbers[i] = number
 	}
-
-	return numbers
 }
 
-func (LegParameters) GenerateRandomX01NumbersAlt(seed string, playerIdx int, legIdx int, isCrazyMode bool) []int {
+func (params *LegParameters) GenerateRandomX01NumbersAlt(seed string, playerIdx int, legIdx int, isCrazyMode bool) []int {
 	if playerIdx != 0 && isCrazyMode {
 		seed += strconv.Itoa(playerIdx)
 	}

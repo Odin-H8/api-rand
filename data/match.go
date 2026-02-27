@@ -21,9 +21,10 @@ func NewMatch(match models.Match) (*models.Match, error) {
 	if match.CreatedAt.IsZero() {
 		match.CreatedAt = time.Now().UTC()
 	}
+	seed := match.Seed
 	res, err := tx.Exec(`INSERT INTO matches (match_type_id, match_mode_id, owe_type_id, venue_id, office_id, is_practice, tournament_id, created_at, seed)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt, match.Seed)
+		match.MatchType.ID, match.MatchMode.ID, match.OweTypeID, match.VenueID, match.OfficeID, match.IsPractice, match.TournamentID, match.CreatedAt, seed)
 	if err != nil {
 		tx.Rollback()
 	}
@@ -80,15 +81,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 		}
 	} else if match.MatchType.ID == models.RANDOMX01 {
 		params := match.Legs[0].Parameters
-		if match.Seed.Valid {
-			for playerIndex, playerID := range match.Players {
-				randomX01Numbers := &models.RandomX01Numbers{
-					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, 0, false),
-				}
-				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
-			}
-		}
+		params.SetRandomX01Numbers(match.Players, seed, len(match.Legs)-1, false)
 		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
@@ -96,15 +89,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 		}
 	} else if match.MatchType.ID == models.RANDOMX01CRAZY {
 		params := match.Legs[0].Parameters
-		if match.Seed.Valid {
-			for playerIndex, playerID := range match.Players {
-				randomX01Numbers := &models.RandomX01Numbers{
-					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, 0, true),
-				}
-				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
-			}
-		}
+		params.SetRandomX01Numbers(match.Players, seed, len(match.Legs)-1, true)
 		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()

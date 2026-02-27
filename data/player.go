@@ -532,7 +532,13 @@ func GetPlayersScore(legID int) (map[int]*models.Player2Leg, error) {
 		if err != nil {
 			return nil, err
 		}
-		params, err := GetLegParameters(legID)
+		leg := models.Leg{
+			ID: legID,
+			LegType: &models.MatchType{
+				ID: matchType,
+			},
+		}
+		params, err := GetLegParameters(&leg)
 		if err != nil {
 			return nil, err
 		}

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
@@ -97,15 +99,8 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 	} else if *matchType == models.RANDOMX01 {
 		params := match.Legs[0].Parameters
 		legIndex := len(match.Legs) - 1
-		if match.Seed.Valid {
-			for playerIndex, playerID := range match.Players {
-				randomX01Numbers := &models.RandomX01Numbers{
-					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, legIndex, false),
-				}
-				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
-			}
-		}
+		params.SetRandomX01Numbers(match.Players, match.Seed, legIndex, false)
+
 		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
@@ -114,15 +109,8 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 	} else if *matchType == models.RANDOMX01CRAZY {
 		params := match.Legs[0].Parameters
 		legIndex := len(match.Legs) - 1
-		if match.Seed.Valid {
-			for playerIndex, playerID := range match.Players {
-				randomX01Numbers := &models.RandomX01Numbers{
-					PlayerId: playerID,
-					Numbers:  params.GenerateRandomX01NumbersAlt(match.Seed.String, playerIndex, legIndex, true),
-				}
-				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
-			}
-		}
+		params.SetRandomX01Numbers(match.Players, match.Seed, legIndex, true)
+
 		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
@@ -767,7 +755,7 @@ func GetLegsForMatch(matchID int) ([]*models.Leg, error) {
 		matchType := leg.LegType.ID
 		if matchType == models.X01 || matchType == models.X01HANDICAP || matchType == models.TICTACTOE || matchType == models.KNOCKOUT ||
 			matchType == models.ONESEVENTY {
-			leg.Parameters, err = GetLegParameters(leg.ID)
+			leg.Parameters, err = GetLegParameters(leg)
 			if err != nil {
 				return nil, err
 			}
@@ -826,7 +814,7 @@ func GetLegs(ids []int) ([]*models.Leg, error) {
 		matchType := leg.LegType.ID
 		if matchType == models.X01 || matchType == models.X01HANDICAP || matchType == models.TICTACTOE || matchType == models.KNOCKOUT ||
 			matchType == models.ONESEVENTY {
-			leg.Parameters, err = GetLegParameters(leg.ID)
+			leg.Parameters, err = GetLegParameters(leg)
 			if err != nil {
 				return nil, err
 			}
@@ -880,7 +868,7 @@ func GetLegsOfType(matchType int, playerID int, start int, limit int, loadVisits
 		}
 		if matchType == models.X01 || matchType == models.TICTACTOE || matchType == models.KNOCKOUT ||
 			matchType == models.ONESEVENTY {
-			leg.Parameters, err = GetLegParameters(leg.ID)
+			leg.Parameters, err = GetLegParameters(leg)
 			if err != nil {
 				return nil, err
 			}
@@ -1030,24 +1018,9 @@ func GetLeg(id int) (*models.Leg, error) {
 	matchType := leg.LegType.ID
 	if matchType == models.X01 || matchType == models.X01HANDICAP || matchType == models.TICTACTOE ||
 		matchType == models.KNOCKOUT || matchType == models.ONESEVENTY || matchType == models.RANDOMX01 || matchType == models.RANDOMX01CRAZY {
-		leg.Parameters, err = GetLegParameters(id)
+		leg.Parameters, err = GetLegParameters(leg)
 		if err != nil {
 			return nil, err
-		}
-	}
-
-	if matchType == models.RANDOMX01 {
-		for i, player := range leg.Players {
-			numbers := leg.Parameters.GenerateRandomX01NumbersAlt("seed", i, 0, false)
-
-			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
-		}
-
-	} else if matchType == models.RANDOMX01CRAZY {
-		for i, player := range leg.Players {
-			numbers := leg.Parameters.GenerateRandomX01NumbersAlt("seed", i, 0, true)
-
-			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
 		}
 	}
 
@@ -1437,14 +1410,14 @@ func DeleteLeg(legID int) error {
 }
 
 // GetLegParameters will return leg parameters for the given leg
-func GetLegParameters(legID int) (*models.LegParameters, error) {
+func GetLegParameters(leg *models.Leg) (*models.LegParameters, error) {
 	params := new(models.LegParameters)
 	n := make([]null.Int, 9)
 	var ost null.Int
 	err := models.DB.QueryRow(`
 		SELECT outshot_type_id, number_1, number_2, number_3, number_4, number_5, number_6, number_7, number_8, number_9, starting_lives, 
 			points_to_win, max_rounds
-		FROM leg_parameters WHERE leg_id = ?`, legID).Scan(&ost, &n[0], &n[1], &n[2], &n[3], &n[4], &n[5], &n[6], &n[7], &n[8],
+		FROM leg_parameters WHERE leg_id = ?`, leg.ID).Scan(&ost, &n[0], &n[1], &n[2], &n[3], &n[4], &n[5], &n[6], &n[7], &n[8],
 		&params.StartingLives, &params.PointsToWin, &params.MaxRounds)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1467,6 +1440,30 @@ func GetLegParameters(legID int) (*models.LegParameters, error) {
 		params.Numbers = numbers
 	}
 	params.Hits = make(map[int]int)
+
+	if leg.LegType.ID == models.RANDOMX01 || leg.LegType.ID == models.RANDOMX01CRAZY {
+		var seed null.String
+		var legIdsString string
+		err = models.DB.QueryRow("SELECT m.seed, group_concat(l.id ORDER BY l.id ASC) FROM matches m JOIN leg l ON l.match_id = m.id WHERE m.id = ? GROUP BY m.id", leg.MatchID).Scan(&seed, &legIdsString)
+		if err != nil {
+			return nil, err
+		}
+
+		split := strings.Split(legIdsString, ",")
+		legIndex := 0
+		for i, legIdString := range split {
+			legId, err := strconv.Atoi(legIdString)
+			if err != nil {
+				return nil, err
+			}
+			if legId == leg.ID {
+				legIndex = i
+				break
+			}
+		}
+
+		params.SetRandomX01Numbers(leg.Players, seed, legIndex, leg.LegType.ID == models.RANDOMX01CRAZY)
+	}
 	return params, nil
 }
 
