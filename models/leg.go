@@ -37,14 +37,14 @@ type Leg struct {
 
 // LegParameters struct used for storing leg parameters
 type LegParameters struct {
-	LegID         int          			 `json:"leg_id,omitempty"`
-	OutshotType   *OutshotType 			 `json:"outshot_type,omitempty"`
-	Numbers       []int        			 `json:"numbers"`
-	Hits          map[int]int  			 `json:"hits"`
-	StartingLives null.Int     			 `json:"starting_lives,omitempty"`
-	PointsToWin   null.Int     			 `json:"points_to_win,omitempty"`
-	MaxRounds     null.Int               `json:"max_rounds,omitempty"`
-	Seed          null.String            `json:"seed,omitempty"`
+	LegID            int                 `json:"leg_id,omitempty"`
+	OutshotType      *OutshotType        `json:"outshot_type,omitempty"`
+	Numbers          []int               `json:"numbers"`
+	Hits             map[int]int         `json:"hits"`
+	StartingLives    null.Int            `json:"starting_lives,omitempty"`
+	PointsToWin      null.Int            `json:"points_to_win,omitempty"`
+	MaxRounds        null.Int            `json:"max_rounds,omitempty"`
+	Seed             null.String         `json:"seed,omitempty"`
 	RandomX01Numbers []*RandomX01Numbers `json:"random_x01_numbers,omitempty"`
 }
 
@@ -156,7 +156,7 @@ func (params LegParameters) IsTicTacToeDraw() bool {
 }
 
 func (params *LegParameters) GenerateRandomX01Numbers(seed string, playerIndex int, legIndex int, isCrazyMode bool) []int {
-	if (playerIndex != 0 && isCrazyMode) {
+	if playerIndex != 0 && isCrazyMode {
 		seed += strconv.Itoa(playerIndex)
 	}
 	seed += strconv.Itoa(legIndex)
@@ -467,6 +467,7 @@ func (leg Leg) IsLegCheckout() bool {
 }
 
 type RandomX01Numbers struct {
-	Numbers []int `json:"numbers"`
-	PlayerId int `json:"player_id"`
+	Numbers  []int `json:"numbers"`
+	PlayerId int   `json:"player_id"`
 }
+

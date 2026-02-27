@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"math"
+	"slices"
 	"sort"
 	"sync"
 
@@ -217,13 +218,22 @@ func AddVisit(visit models.Visit) (*models.Visit, error) {
 		}
 	} else if matchType == models.RANDOMX01 {
 		visit.SetIsBust(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
-		newValues := leg.Parameters.RandomX01Numbers[visit.PlayerID].Numbers
+
+		i := slices.Index(leg.Players, visit.PlayerID)
+
+		newValues := leg.Parameters.RandomX01Numbers[i].Numbers
+
 		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64]))
+
+		visit.SecondDart.Value = null.IntFrom(int64(newValues[visit.SecondDart.Value.Int64]))
+
+		visit.ThirdDart.Value = null.IntFrom(int64(newValues[visit.ThirdDart.Value.Int64]))
+
 		isFinished = !visit.IsBust && visit.IsVisitCheckout(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
 	} else if matchType == models.RANDOMX01CRAZY {
 		visit.SetIsBust(players[visit.PlayerID].CurrentScore, leg.Parameters.OutshotType.ID)
 		newValues := leg.Parameters.RandomX01Numbers[visit.PlayerID].Numbers
-		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64 - 1]))
+		visit.FirstDart.Value = null.IntFrom(int64(newValues[visit.FirstDart.Value.Int64-1]))
 	}
 
 	// Determine who will be the next player

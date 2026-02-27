@@ -106,7 +106,7 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
 		}
-		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives) VALUES (?, ?)", legID, params.StartingLives)
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -123,7 +123,7 @@ func NewLeg(matchID int, startingScore int, players []int, matchType *int) (*mod
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
 		}
-		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives) VALUES (?, ?)", legID, params.StartingLives)
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -1029,10 +1029,25 @@ func GetLeg(id int) (*models.Leg, error) {
 
 	matchType := leg.LegType.ID
 	if matchType == models.X01 || matchType == models.X01HANDICAP || matchType == models.TICTACTOE ||
-		matchType == models.KNOCKOUT || matchType == models.ONESEVENTY {
+		matchType == models.KNOCKOUT || matchType == models.ONESEVENTY || matchType == models.RANDOMX01 || matchType == models.RANDOMX01CRAZY {
 		leg.Parameters, err = GetLegParameters(id)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	if matchType == models.RANDOMX01 {
+		for i, player := range leg.Players {
+			numbers := leg.Parameters.GenerateRandomX01Numbers("seed", i, 0, false)
+
+			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
+		}
+
+	} else if matchType == models.RANDOMX01CRAZY {
+		for i, player := range leg.Players {
+			numbers := leg.Parameters.GenerateRandomX01Numbers("seed", i, 0, true)
+
+			leg.Parameters.RandomX01Numbers = append(leg.Parameters.RandomX01Numbers, &models.RandomX01Numbers{Numbers: numbers, PlayerId: player})
 		}
 	}
 

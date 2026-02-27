@@ -89,7 +89,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
 		}
-		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives) VALUES (?, ?)", legID, params.StartingLives)
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
@@ -105,7 +105,7 @@ func NewMatch(match models.Match) (*models.Match, error) {
 				params.RandomX01Numbers = append(params.RandomX01Numbers, randomX01Numbers)
 			}
 		}
-		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, starting_lives, seed) VALUES (?, ?, ?)", legID, params.StartingLives, match.Seed.String)
+		_, err = tx.Exec("INSERT INTO leg_parameters (leg_id, outshot_type_id) VALUES (?, ?)", legID, params.OutshotType.ID)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
