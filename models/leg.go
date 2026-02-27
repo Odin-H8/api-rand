@@ -189,7 +189,7 @@ func (LegParameters) GenerateRandomX01NumbersAlt(seed string, playerIdx int, leg
 
 	tempSlice := make([]int, 0, 21)
 	for i := range 20 {
-		tempSlice = append(tempSlice, i)
+		tempSlice = append(tempSlice, i+1)
 	}
 
 	tempSlice = append(tempSlice, 25)
@@ -498,4 +498,3 @@ type RandomX01Numbers struct {
 	Numbers  []int `json:"numbers"`
 	PlayerId int   `json:"player_id"`
 }
-
