@@ -449,8 +449,8 @@ func FinishLeg(legID int, currentPlayer int, winnerID null.Int) error {
 		}
 		for playerID, stats := range statisticsMap {
 			_, err = tx.Exec(`
-				INSERT INTO statistics_random_x01_crazy (leg_id, player_id, ppd, ppd_score, first_nine_ppd, first_nine_ppd_score, checkout_percentage, checkout_attempts, checkout, darts_thrown, 60s_plus,
-					100s_plus, 140s_plus, 180s, accuracy_20, accuracy_19, overall_accuracy, crazy_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, legID, playerID, stats.PPD, stats.PPDScore, stats.FirstNinePPD, stats.FirstNinePPDScore,
+				INSERT INTO statistics_random_x01 (leg_id, player_id, ppd, ppd_score, first_nine_ppd, first_nine_ppd_score, checkout_percentage, checkout_attempts, checkout, darts_thrown, 60s_plus,
+					100s_plus, 140s_plus, 180s, accuracy_20, accuracy_19, overall_accuracy, crazy_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, legID, playerID, stats.PPD, stats.PPDScore, stats.FirstNinePPD, stats.FirstNinePPDScore,
 				stats.CheckoutPercentage, stats.CheckoutAttempts, stats.Checkout, stats.DartsThrown, stats.Score60sPlus, stats.Score100sPlus, stats.Score140sPlus,
 				stats.Score180s, stats.AccuracyStatistics.Accuracy20, stats.AccuracyStatistics.Accuracy19, stats.AccuracyStatistics.AccuracyOverall, true)
 			if err != nil {
